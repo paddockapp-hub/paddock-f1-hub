@@ -1,0 +1,22 @@
+{
+  "server": {
+    "port": 8888,
+    "host": "localhost",
+    "environment": "production"
+  },
+  "admin": {
+    "password": "ckdgh0828!",
+    "sessionTimeout": 3600000
+  },
+  "features": {
+    "enableAnalytics": true,
+    "enableCommunity": true,
+    "enableF1Api": true,
+    "cacheInterval": 30000
+  },
+  "security": {
+    "enableRateLimit": true,
+    "maxRequestsPerMinute": 250,
+    "enableCors": true
+  }
+}

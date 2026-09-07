@@ -1,0 +1,29 @@
+{
+  "name": "paddock-f1-hub",
+  "version": "1.0.0",
+  "description": "PADDOCK - All-in-one F1 Fan Community & Live Real-time Engine",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "prod": "NODE_ENV=production node server.js"
+  },
+  "keywords": [
+    "f1",
+    "formula1",
+    "racing",
+    "community",
+    "real-time",
+    "standings",
+    "calendar"
+  ],
+  "author": "PADDOCK Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paddock-f1/hub"
+  }
+}

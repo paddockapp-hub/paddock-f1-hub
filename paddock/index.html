@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PADDOCK — F1 Hub & Community</title>
+  <meta name="description" content="All-in-one F1 Fan Community & Live Real-time Engine">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏎️</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="stylesheet" href="./css/home.css">
+  <link rel="stylesheet" href="./css/calendar.css">
+  <link rel="stylesheet" href="./css/standings.css">
+  <link rel="stylesheet" href="./css/community.css">
+
+  <!-- Firebase SDK (선택 사항 - Firebase 연동 시 주석 해제) -->
+  <!--
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  -->
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#home" class="nav-logo">
+        <span class="logo-icon">🏎️</span>
+        <span class="logo-text">PADDOCK</span>
+      </a>
+
+      <!-- 우측 상단 펼침 메뉴 (데스크톱 및 세로모드 ☰ 석삼자 클릭 시 펼쳐지는 메뉴) -->
+      <div class="nav-links" id="nav-links">
+        <a href="#home" class="nav-link active" id="nav-home" data-page="home">🏠 홈 (Home)</a>
+        <a href="#calendar" class="nav-link" id="nav-calendar" data-page="calendar">📅 캘린더 (Calendar)</a>
+        <a href="#standings" class="nav-link" id="nav-standings" data-page="standings">🏆 순위표 (Standings)</a>
+        <a href="#community" class="nav-link" id="nav-community" data-page="community">💬 커뮤니티 (Community)</a>
+
+        <!-- 세로 화면 전용 추가 컨트롤 -->
+        <div class="mobile-extra-controls">
+          <div style="display:flex; gap:8px;">
+            <select class="lang-btn" style="flex:1;" onchange="TeamThemeEngine.applyTheme(this.value)">
+              <option value="ferrari">🔴 Ferrari</option>
+              <option value="mercedes">🟢 Mercedes</option>
+              <option value="mclaren">🟠 McLaren</option>
+              <option value="redbull">🔵 Red Bull</option>
+              <option value="alpine">💗 Alpine</option>
+              <option value="racingbulls">💙 Racing Bulls</option>
+              <option value="haas">🔴 Haas</option>
+              <option value="astonmartin">💚 Aston Martin</option>
+              <option value="williams">🔷 Williams</option>
+              <option value="audi">💚 Audi Sauber</option>
+              <option value="cadillac">💛 Cadillac</option>
+            </select>
+            <button class="lang-btn" onclick="App.toggleLanguage()">🌐 EN/KO</button>
+          </div>
+          <a href="admin.html" class="btn btn-secondary btn-sm" style="width:100%;">🔐 관리자 대시보드</a>
+        </div>
+      </div>
+
+      <!-- 데스크톱 우측 컨트롤 -->
+      <div class="desktop-controls">
+        <select class="lang-btn" onchange="TeamThemeEngine.applyTheme(this.value)" id="theme-selector">
+          <option value="ferrari">🔴 Ferrari</option>
+          <option value="mercedes">🟢 Mercedes</option>
+          <option value="mclaren">🟠 McLaren</option>
+          <option value="redbull">🔵 Red Bull</option>
+          <option value="alpine">💗 Alpine</option>
+          <option value="racingbulls">💙 Racing Bulls</option>
+          <option value="haas">🔴 Haas</option>
+          <option value="astonmartin">💚 Aston Martin</option>
+          <option value="williams">🔷 Williams</option>
+          <option value="audi">💚 Audi Sauber</option>
+          <option value="cadillac">💛 Cadillac</option>
+        </select>
+        <button class="lang-btn" onclick="App.toggleLanguage()">🌐 EN / KO</button>
+        <a href="admin.html" class="btn btn-secondary btn-sm">🔐 Admin</a>
+      </div>
+
+      <!-- 메뉴가 항상 펼쳐져 있으므로 햄버거 버튼 제거 -->
+    </div>
+  </nav>
+
+  <!-- Sponsor Ad Banner Placeholder Top -->
+  <div id="ad-banner-top" class="container"></div>
+
+  <!-- Main Content -->
+  <main id="main-content" class="main-content"></main>
+
+  <!-- Sponsor Ad Banner Placeholder Bottom -->
+  <div id="ad-banner-bottom" class="container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2026 PADDOCK. All-in-one F1 Hub.</p>
+      <a href="admin.html" class="footer-admin-link">Admin Panel</a>
+    </div>
+  </footer>
+
+  <!-- App Scripts -->
+  <script src="./js/team-theme.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/ads-config.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/home.js"></script>
+  <script src="./js/calendar.js"></script>
+  <script src="./js/standings.js"></script>
+  <script src="./js/community.js"></script>
+  <script src="./js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof SponsorAdsConfig !== 'undefined') {
+        SponsorAdsConfig.renderBanner('ad-banner-top');
+        SponsorAdsConfig.renderBanner('ad-banner-bottom');
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(function() {});
+      }
+    });
+  </script>
+</body>
+</html>

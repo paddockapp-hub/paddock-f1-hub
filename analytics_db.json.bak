@@ -1,0 +1,19 @@
+{
+  "hourlyData": {
+    "2026-09-06 20:00": {
+      "hourLabel": "2026-09-06 20:00",
+      "visitors": 1,
+      "totalDwellSeconds": 137,
+      "uniqueSessions": [
+        "sess_1788694594394_j2plhp"
+      ]
+    }
+  },
+  "activeSessions": {
+    "sess_1788694594394_j2plhp": {
+      "startTime": 1788694594405,
+      "lastPing": 1788694735583,
+      "dwellSeconds": 137
+    }
+  }
+}

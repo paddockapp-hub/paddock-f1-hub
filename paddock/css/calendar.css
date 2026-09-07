@@ -1,0 +1,206 @@
+.calendar-page {
+  padding-bottom: 4rem;
+}
+
+.page-title {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.page-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.race-card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--glass-border);
+  border-left: 4px solid var(--glass-border);
+  padding: 1.5rem;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.race-card:hover {
+  transform: translateY(-5px);
+  background: var(--bg-card-hover);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Card States */
+.race-card.completed {
+  opacity: 0.65;
+  border-left-color: #555;
+}
+
+.race-card.completed:hover {
+  opacity: 0.8;
+}
+
+.race-card.next {
+  border-left-color: var(--accent-red);
+  border-top-color: rgba(225, 6, 0, 0.3);
+  border-right-color: rgba(225, 6, 0, 0.3);
+  border-bottom-color: rgba(225, 6, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(225, 6, 0, 0.1);
+  background: linear-gradient(145deg, rgba(225, 6, 0, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.race-card.upcoming {
+  border-left-color: var(--text-secondary);
+}
+
+/* Header & Badges */
+.race-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.race-round {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.race-card.next .race-round {
+  color: var(--accent-red);
+}
+
+.race-badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-completed {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.badge-live {
+  background: var(--accent-red);
+  color: white;
+  animation: pulse-glow 2s infinite;
+}
+
+.badge-upcoming {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+.badge-sprint {
+  background: rgba(147, 51, 234, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+/* Body */
+.race-card-body {
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+.race-flag {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.race-name {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.race-circuit {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0 0 0.3rem 0;
+}
+
+.race-date {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+/* Sessions */
+.race-sessions {
+  border-top: 1px solid var(--glass-border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.session-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-name {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.session-time {
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.race-card.next .session-row:last-child .session-time {
+  color: var(--accent-red);
+}
+
+/* Animations */
+.slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(225, 6, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(225, 6, 0, 0); }
+}
+
+/* Responsive - 화면 크기 무관 일관된 UI 유지 */

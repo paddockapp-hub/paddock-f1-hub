@@ -1,0 +1,198 @@
+/* ===== style.css — Ultimate Mobile & Desktop Navigation Engine ===== */
+:root {
+  --bg-primary: #07070a;
+  --bg-secondary: #0f0f17;
+  --bg-tertiary: #171726;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --text-primary: #ffffff;
+  --text-secondary: #a5a5b8;
+  --text-muted: #656578;
+  --accent-red: #e10600;
+  --accent-red-hover: #ff1a1a;
+  --accent-gradient: linear-gradient(135deg, #e10600, #ff4444);
+  --glass-bg: rgba(20, 20, 32, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --border-radius: 12px;
+  --border-radius-lg: 18px;
+  --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  --font-heading: 'Outfit', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: 4rem;
+  overflow-x: hidden;
+}
+
+/* ======================================================== */
+/* 🚀 HEADER & NAVIGATION (DESKTOP & MOBILE ISOLATED) */
+/* ======================================================== */
+header, .navbar {
+  position: sticky; top: 0; z-index: 99999;
+  background: rgba(7, 7, 10, 0.94); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  width: 100%;
+}
+
+.nav-container {
+  max-width: 1200px; margin: 0 auto; padding: 0.7rem 1.2rem;
+  display: flex; justify-content: space-between; align-items: center;
+  position: relative; min-height: 62px;
+}
+
+.nav-logo, .logo {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-family: var(--font-heading); font-size: 1.6rem; font-weight: 900;
+  color: white; text-decoration: none; z-index: 100001; letter-spacing: -0.5px;
+}
+
+.logo-icon { font-size: 1.5rem; filter: drop-shadow(0 0 8px rgba(225,6,0,0.6)); }
+
+/* 네비게이션 링크 자체는 항상 숨겨진 드롭다운 메뉴로 통일 (화면 크기 무관) */
+.nav-link, .nav-tab {
+  padding: 0.55rem 1.1rem; border-radius: 20px; color: var(--text-secondary);
+  font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none;
+  background: none; transition: var(--transition); min-height: 44px;
+  display: inline-flex; align-items: center; text-decoration: none;
+}
+
+.nav-link.active, .nav-link:hover,
+.nav-tab.active, .nav-tab:hover {
+  background: var(--accent-gradient); color: white; box-shadow: 0 4px 15px rgba(225,6,0,0.3);
+}
+
+/* ======================================================== */
+/* 🍔 햄버거 메뉴: 항상 펼쳐진 상태이므로 버튼 숨김 */
+/* ======================================================== */
+.nav-hamburger, .nav-hamburger-btn {
+  display: none; /* 메뉴가 항상 펼쳐져 있으므로 버튼 숨김 */
+}
+
+/* 데스크톱 전용 컨트롤(테마 선택, 언어 등)은 이제 사용 안 함 — 전부 햄버거 메뉴 안으로 통합 */
+.desktop-controls { display: none; }
+
+/* ☰ 버튼을 눌렀을 때 펼쳐지는 메뉴 — 항상 이 모양 하나로 통일 */
+.nav-links, .nav-tabs {
+  display: flex; /* 기본적으로 펼침 상태 */
+  position: fixed; top: 62px; left: 0; right: 0;
+  background: rgba(12, 12, 18, 0.98); backdrop-filter: blur(30px);
+  flex-direction: column; padding: 1.5rem; gap: 12px;
+  border-bottom: 2px solid var(--accent-red);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.95);
+  z-index: 100000; pointer-events: auto;
+  max-height: calc(100vh - 62px); overflow-y: auto;
+}
+
+/* 💡 화면 크기와 무관하게 항상 펼쳐진 상태 유지 */
+.nav-links.open, .nav-tabs.open {
+  display: flex;
+  animation: menuExpand 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-links .nav-link, .nav-tabs .nav-tab {
+  width: 100%; justify-content: flex-start;
+  padding: 1.1rem 1.4rem; font-size: 1.15rem;
+  border-radius: 14px; background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  font-family: var(--font-heading); font-weight: 700;
+  color: white;
+}
+
+.mobile-extra-controls {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--glass-border); width: 100%;
+}
+
+@media (max-width: 900px) {
+  .countdown-grid { gap: 0.5rem; }
+  .time-unit { min-width: 65px; padding: 0.8rem 0.3rem; }
+  .time-val { font-size: 1.8rem; }
+  .container { padding: 0 0.8rem; margin: 1rem auto; }
+  .hero-box { padding: 2rem 1rem; }
+}
+
+@keyframes menuExpand {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Buttons & UI Controls */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 0.65rem 1.25rem; border-radius: var(--border-radius);
+  font-family: var(--font-body); font-weight: 600; font-size: 0.88rem;
+  cursor: pointer; border: none; transition: var(--transition);
+  min-height: 44px; touch-action: manipulation; user-select: none;
+}
+
+.btn-primary { background: var(--accent-gradient); color: white; box-shadow: 0 4px 18px rgba(225, 6, 0, 0.4); }
+.btn-primary:active, .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(225, 6, 0, 0.6); }
+
+.btn-secondary { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); border: 1px solid var(--glass-border); }
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.14); }
+.btn-sm { min-height: 38px; padding: 0.4rem 0.85rem; font-size: 0.82rem; }
+
+.lang-btn {
+  background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border);
+  color: white; padding: 0.45rem 0.85rem; border-radius: 20px;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: var(--transition);
+  min-height: 40px; touch-action: manipulation; outline: none;
+}
+
+/* Page Container & Cards */
+.container { max-width: 1200px; margin: 1.5rem auto; padding: 0 1.2rem; }
+.card { background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius-lg); padding: 1.5rem; backdrop-filter: blur(10px); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border); }
+
+/* Badges */
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-completed { background: rgba(255, 255, 255, 0.08); color: var(--text-muted); border: 1px solid var(--glass-border); }
+.badge-live { background: rgba(225, 6, 0, 0.2); color: #ff4444; border: 1px solid var(--accent-red); animation: pulse 1.5s infinite; }
+.badge-upcoming { background: rgba(54, 113, 198, 0.2); color: #6692FF; border: 1px solid rgba(54, 113, 198, 0.4); }
+
+@keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+
+/* Form Controls */
+.form-group { margin-bottom: 1rem; }
+.form-label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 600; }
+.form-input, .form-textarea {
+  width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius); color: white; padding: 0.85rem 1rem;
+  font-family: inherit; font-size: 0.95rem; outline: none; transition: var(--transition);
+}
+.form-input:focus, .form-textarea:focus { border-color: var(--accent-red); box-shadow: 0 0 12px rgba(225, 6, 0, 0.3); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: #151522; color: white;
+  padding: 0.9rem 1.6rem; border-radius: 12px; border-left: 4px solid var(--accent-red);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 100000; display: none;
+  font-weight: 600; font-size: 0.9rem; animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Footer */
+.footer { border-top: 1px solid var(--glass-border); margin-top: 3rem; }
+.footer-content {
+  max-width: 1100px; margin: 0 auto; padding: 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  color: var(--text-muted); font-size: 0.85rem;
+}
+.footer-admin-link { color: var(--text-muted); text-decoration: none; }
+.footer-admin-link:hover { color: var(--accent-red); }
+
+.empty-state { text-align: center; color: var(--text-muted); padding: 3rem 1rem; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 8px; }
