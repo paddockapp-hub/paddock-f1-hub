@@ -60,8 +60,11 @@ var StandingsPage = {
 
   autoFetchApiData: function() {
     var self = this;
-    fetch('/api/standings')
-      .then(function(res) { return res.json(); })
+    fetch('/api/standings?ts=' + Date.now(), { cache: 'no-store' })
+      .then(function(res) {
+        if (!res.ok) throw new Error('Standings API request failed');
+        return res.json();
+      })
       .then(function(data) {
         if (data && data.success && data.standings && data.standings.length > 0) {
           DEFAULT_DRIVERS = data.standings.map(function(item) {
@@ -77,21 +80,21 @@ var StandingsPage = {
           // Make standings available globally for other modules
           window.LOCAL_DRIVER_STANDINGS = DEFAULT_DRIVERS;
           window.ALL_DRIVER_STANDINGS = DEFAULT_DRIVERS;
-          if (data.constructorStandings && data.constructorStandings.length > 0) {
-            DEFAULT_CONSTRUCTORS = data.constructorStandings.map(function(item) {
-              return {
-                pos: parseInt(item.position),
-                name: item.Constructor ? item.Constructor.name : 'F1 Team',
-                points: parseFloat(item.points)
-              };
-            });
-            window.ALL_CONSTRUCTOR_STANDINGS = DEFAULT_CONSTRUCTORS;
-          }
-          var content = document.getElementById('standings-content');
-          if (content) {
-            content.innerHTML = self.currentTab === 'drivers' ? self.renderDrivers() : self.renderConstructors();
-            self.animateBars();
-          }
+        }
+        if (data && data.success && data.constructorStandings && data.constructorStandings.length > 0) {
+          DEFAULT_CONSTRUCTORS = data.constructorStandings.map(function(item) {
+            return {
+              pos: parseInt(item.position),
+              name: item.Constructor ? item.Constructor.name : 'F1 Team',
+              points: parseFloat(item.points)
+            };
+          });
+          window.ALL_CONSTRUCTOR_STANDINGS = DEFAULT_CONSTRUCTORS;
+        }
+        var content = document.getElementById('standings-content');
+        if (content && data && data.success) {
+          content.innerHTML = self.currentTab === 'drivers' ? self.renderDrivers() : self.renderConstructors();
+          self.animateBars();
         }
       })
       .catch(function(err) {});

@@ -43,6 +43,15 @@ var HomePage = {
           '<div id="home-top5-drivers-list">' + this.renderTop5Drivers() + '</div>' +
         '</div>' +
       '</section>' +
+      '<section class="championship-section" style="max-width: 800px; margin: 1.5rem auto 0;">' +
+        '<div class="card" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius-lg); padding: 1.5rem;">' +
+          '<div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--glass-border);">' +
+            '<h3 style="font-family: var(--font-heading); font-size: 1.3rem;">🏆 Constructor Championship (컨스트럭터 현황)</h3>' +
+            '<a href="#standings" class="btn btn-secondary btn-sm" style="font-size: 0.8rem;">Full Standings →</a>' +
+          '</div>' +
+          '<div id="home-constructor-list">' + this.renderConstructors() + '</div>' +
+        '</div>' +
+      '</section>' +
     '</div>';
   },
 
@@ -73,6 +82,25 @@ var HomePage = {
           '</div>' +
         '</div>' +
         '<span style="font-family: var(--font-heading); font-weight: 800; font-size: 1.2rem; color: var(--accent-red);">' + d.points + ' pts</span>' +
+      '</div>';
+    }).join('');
+  },
+
+  renderConstructors: function() {
+    var constructors = (typeof ALL_CONSTRUCTOR_STANDINGS !== 'undefined' && ALL_CONSTRUCTOR_STANDINGS.length > 0)
+      ? ALL_CONSTRUCTOR_STANDINGS.slice(0, 5) : [];
+    if (constructors.length === 0) {
+      return '<div class="empty-state">Loading live constructor standings...</div>';
+    }
+    return constructors.map(function(team, i) {
+      var color = (typeof TEAM_COLORS !== 'undefined' && TEAM_COLORS[team.name]) ? TEAM_COLORS[team.name] : '#e10600';
+      return '<div class="mini-row" style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;">' +
+        '<div style="display:flex;align-items:center;gap:12px;">' +
+          '<span style="font-family:var(--font-heading);font-weight:800;font-size:1.1rem;width:24px;color:' + (i < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][i] : 'var(--text-muted)') + ';">' + team.pos + '</span>' +
+          '<div class="team-bar" style="width:4px;height:20px;border-radius:2px;background:' + color + ';"></div>' +
+          '<span style="font-weight:600;font-size:1rem;color:white;">' + team.name + '</span>' +
+        '</div>' +
+        '<span style="font-family:var(--font-heading);font-weight:800;font-size:1.2rem;color:var(--accent-red);">' + team.points + ' pts</span>' +
       '</div>';
     }).join('');
   },
@@ -134,7 +162,8 @@ var HomePage = {
   },
 
   fetchTop5FromAPI: function() {
-    fetch('/api/standings')
+    var self = this;
+    fetch('/api/standings?ts=' + Date.now(), { cache: 'no-store' })
       .then(function(res) { return res.json(); })
       .then(function(data) {
         if (data && data.success && data.standings && data.standings.length > 0) {
@@ -164,6 +193,17 @@ var HomePage = {
             }).join('');
           }
         }
+        if (data && data.success && data.constructorStandings && data.constructorStandings.length > 0) {
+          window.ALL_CONSTRUCTOR_STANDINGS = data.constructorStandings.map(function(item) {
+            return {
+              pos: parseInt(item.position),
+              name: item.Constructor ? item.Constructor.name : 'F1 Team',
+              points: parseFloat(item.points)
+            };
+          });
+          var constructorList = document.getElementById('home-constructor-list');
+          if (constructorList) constructorList.innerHTML = self.renderConstructors();
+        }
       }).catch(function() {});
   },
 
@@ -173,6 +213,7 @@ var HomePage = {
     if (this.syncTimer) clearInterval(this.syncTimer);
     this.syncTimer = setInterval(this.fetchNextRace.bind(this), 30000);
     this.fetchTop5FromAPI();
+    this.standingsSyncTimer = setInterval(this.fetchTop5FromAPI.bind(this), 30000);
   },
 
   cleanup: function() {
@@ -180,6 +221,10 @@ var HomePage = {
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
+    }
+    if (this.standingsSyncTimer) {
+      clearInterval(this.standingsSyncTimer);
+      this.standingsSyncTimer = null;
     }
   }
 };
