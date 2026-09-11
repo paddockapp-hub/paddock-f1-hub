@@ -91,6 +91,10 @@ git push -u origin main
 
 **결과**: 자동으로 HTTPS 도메인 할당 (예: paddock-f1-hub.vercel.app)
 
+### Render 배포 설정
+
+이 저장소에는 `render.yaml`이 포함되어 있습니다. Render에서 저장소를 선택할 때 Blueprint 방식으로 배포하면 `ADMIN_PASS` 입력란과 자동 생성되는 `APP_SALT`가 표시됩니다. 기존 관리자 비밀번호를 유지하려면 `ADMIN_PASS`에 그 비밀번호를 Render 환경변수로 입력해야 합니다. 비밀번호를 코드나 GitHub 파일에 입력하면 안 됩니다.
+
 ---
 
 ### 옵션 3: Firebase 백엔드 연동 (고급)

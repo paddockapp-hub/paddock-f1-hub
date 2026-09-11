@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: paddock-f1-hub
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: ADMIN_PASS
+        sync: false
+      - key: APP_SALT
+        generateValue: true
