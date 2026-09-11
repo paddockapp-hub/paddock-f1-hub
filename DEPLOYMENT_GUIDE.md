@@ -71,10 +71,10 @@ PORT=3000 node server.js
 
 ## 🔒 보안 설정
 
-### 관리자 비밀번호 변경
-`server.js` 파일에서 다음 줄을 수정하세요:
+### 관리자 비밀번호 설정
+소스 코드에 비밀번호를 입력하지 말고 환경 변수로 설정하세요:
 ```javascript
-const ADMIN_PASS = process.env.ADMIN_PASS || 'ckdgh0828!';
+const ADMIN_PASS = process.env.ADMIN_PASS;
 ```
 
 환경 변수로 설정:
@@ -85,6 +85,8 @@ set ADMIN_PASS=새비밀번호 && node server.js
 # macOS/Linux
 ADMIN_PASS=새비밀번호 node server.js
 ```
+
+`APP_SALT`에도 충분히 긴 랜덤 문자열을 설정하세요. 두 값이 없으면 서버가 시작되지 않습니다.
 
 ### 방화벽 설정
 - 포트 8888 (또는 설정한 포트)를 열어두세요
@@ -160,8 +162,8 @@ node --version
 
 ### 관리자 패널 접속
 1. http://localhost:8888/admin.html 접속
-2. 기본 비밀번호: `ckdgh0828!`
-3. 보안을 위해 비밀번호 변경 권장
+2. 관리자 비밀번호는 `ADMIN_PASS` 환경변수로 설정
+3. `APP_SALT`에도 충분히 긴 랜덤 문자열을 설정
 
 ### 관리자 기능
 - 시간별 사용자 통계 확인
@@ -194,7 +196,7 @@ node --version
 
 ## ⚠️ 중요 공지
 
-1. **보안**: 기본 비밀번호를 반드시 변경하세요
+1. **보안**: 관리자 비밀번호와 `APP_SALT`를 환경변수로 설정하세요
 2. **백업**: 정기적으로 데이터 폴더 백업 권장
 3. **HTTPS**: 인터넷 배포 시 SSL 인증서 사용 권장
 4. **법적 준수**: 사용자 데이터 처리 시 개인정보보호법 준수

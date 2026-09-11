@@ -21,7 +21,7 @@ node server.js
 ## 접속 정보
 - **주소**: http://localhost:8888
 - **관리자 패널**: http://localhost:8888/admin.html
-- **기본 비밀번호**: ckdgh0828!
+- **관리자 비밀번호**: `ADMIN_PASS` 환경변수로 설정
 
 ## 주요 기능
 - 🏆 실시간 F1 드라이버/팀 순위표

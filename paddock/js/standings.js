@@ -77,6 +77,16 @@ var StandingsPage = {
           // Make standings available globally for other modules
           window.LOCAL_DRIVER_STANDINGS = DEFAULT_DRIVERS;
           window.ALL_DRIVER_STANDINGS = DEFAULT_DRIVERS;
+          if (data.constructorStandings && data.constructorStandings.length > 0) {
+            DEFAULT_CONSTRUCTORS = data.constructorStandings.map(function(item) {
+              return {
+                pos: parseInt(item.position),
+                name: item.Constructor ? item.Constructor.name : 'F1 Team',
+                points: parseFloat(item.points)
+              };
+            });
+            window.ALL_CONSTRUCTOR_STANDINGS = DEFAULT_CONSTRUCTORS;
+          }
           var content = document.getElementById('standings-content');
           if (content) {
             content.innerHTML = self.currentTab === 'drivers' ? self.renderDrivers() : self.renderConstructors();

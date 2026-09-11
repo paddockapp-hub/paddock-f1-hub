@@ -14,13 +14,44 @@ const DB_FILE = path.join(__dirname, 'posts_db.json');
 const DB_BACKUP_FILE = path.join(__dirname, 'posts_db.json.bak');
 const ANALYTICS_FILE = path.join(__dirname, 'analytics_db.json');
 const ANALYTICS_BACKUP_FILE = path.join(__dirname, 'analytics_db.json.bak');
-const ADMIN_PASS = process.env.ADMIN_PASS || 'ckdgh0828!';
-const SALT = process.env.APP_SALT || 'PADDOCK_F1_SALT_2026_SECRET';
+const ADMIN_PASS = process.env.ADMIN_PASS;
+const SALT = process.env.APP_SALT;
+
+if (!ADMIN_PASS || !SALT) {
+  throw new Error('ADMIN_PASS and APP_SALT environment variables are required.');
+}
 
 // Salted Password Hash
 function hashPassword(pass) {
   if (!pass) return '';
   return crypto.createHash('sha256').update(String(pass) + SALT).digest('hex');
+}
+
+function createAdminToken() {
+  const payload = Buffer.from(JSON.stringify({
+    role: 'admin',
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000
+  })).toString('base64url');
+  const signature = crypto.createHmac('sha256', SALT).update(payload).digest('base64url');
+  return payload + '.' + signature;
+}
+
+function isValidAdminToken(token) {
+  if (!token) return false;
+  const parts = String(token).split('.');
+  if (parts.length !== 2) return false;
+
+  const expectedSignature = crypto.createHmac('sha256', SALT).update(parts[0]).digest('base64url');
+  const received = Buffer.from(parts[1]);
+  const expected = Buffer.from(expectedSignature);
+  if (received.length !== expected.length || !crypto.timingSafeEqual(received, expected)) return false;
+
+  try {
+    const payload = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
+    return payload.role === 'admin' && Number(payload.expiresAt) > Date.now();
+  } catch (e) {
+    return false;
+  }
 }
 
 // XSS Sanitization
@@ -171,6 +202,7 @@ if (cluster.isMaster || cluster.isPrimary) {
   console.log(`[Master Production Engine] Launching ${numCpus} Cluster Worker Threads...`);
 
   let globalStandingsCache = null;
+  let globalConstructorStandingsCache = null;
   let globalRacesCache = null;
   let lastSyncTime = Date.now();
 
@@ -240,6 +272,18 @@ if (cluster.isMaster || cluster.isPrimary) {
         }
       }
 
+      const constructorRes = await fetchWithTimeout(`https://api.jolpi.ca/ergast/f1/${currentYear}/constructorstandings.json`, {}, 6000);
+      if (constructorRes && constructorRes.ok) {
+        const constructorJson = await constructorRes.json().catch(() => null);
+        if (constructorJson && constructorJson.MRData &&
+            constructorJson.MRData.StandingsTable &&
+            constructorJson.MRData.StandingsTable.StandingsLists &&
+            constructorJson.MRData.StandingsTable.StandingsLists.length > 0) {
+          globalConstructorStandingsCache =
+            constructorJson.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
+        }
+      }
+
       lastSyncTime = Date.now();
       broadcastCacheToWorkers();
     } catch (err) {}
@@ -251,6 +295,7 @@ if (cluster.isMaster || cluster.isPrimary) {
         cluster.workers[id].send({
           type: 'CACHE_UPDATE',
           standings: globalStandingsCache,
+          constructorStandings: globalConstructorStandingsCache,
           races: globalRacesCache,
           updatedAt: lastSyncTime
         });
@@ -268,6 +313,7 @@ if (cluster.isMaster || cluster.isPrimary) {
         worker.send({
           type: 'CACHE_UPDATE',
           standings: globalStandingsCache,
+          constructorStandings: globalConstructorStandingsCache,
           races: globalRacesCache,
           updatedAt: lastSyncTime
         });
@@ -281,6 +327,7 @@ if (cluster.isMaster || cluster.isPrimary) {
     newWorker.send({
       type: 'CACHE_UPDATE',
       standings: globalStandingsCache,
+      constructorStandings: globalConstructorStandingsCache,
       races: globalRacesCache,
       updatedAt: lastSyncTime
     });
@@ -294,6 +341,7 @@ if (cluster.isMaster || cluster.isPrimary) {
 // ==========================================
 
 let localStandingsCache = null;
+let localConstructorStandingsCache = null;
 let localRacesCache = null;
 let localCacheUpdatedAt = Date.now();
 
@@ -302,6 +350,7 @@ try { process.send({ type: 'REQUEST_CACHE' }); } catch (e) {}
 process.on('message', (msg) => {
   if (msg && msg.type === 'CACHE_UPDATE') {
     if (msg.standings) localStandingsCache = msg.standings;
+    if (msg.constructorStandings) localConstructorStandingsCache = msg.constructorStandings;
     if (msg.races) localRacesCache = msg.races;
     if (msg.updatedAt) localCacheUpdatedAt = msg.updatedAt;
   }
@@ -413,7 +462,7 @@ const server = http.createServer((req, res) => {
       try {
         const data = JSON.parse(body);
         if (data.password === ADMIN_PASS) {
-          sendJSON({ success: true, token: 'admin_authenticated_token_ckdgh0828' });
+          sendJSON({ success: true, token: createAdminToken() });
         } else {
           sendJSON({ success: false, error: 'Incorrect Admin Password' }, 401);
         }
@@ -423,12 +472,19 @@ const server = http.createServer((req, res) => {
   }
 
   // Admin Stats API
+  if (pathname === '/api/admin/session' && method === 'GET') {
+    const valid = isValidAdminToken(req.headers['authorization'] || '');
+    sendJSON({ success: valid }, valid ? 200 : 401);
+    return;
+  }
+
   if (pathname === '/api/admin/stats' && method === 'GET') {
     const authHeader = req.headers['authorization'] || '';
-    if (!authHeader.includes('ckdgh0828')) {
+    if (!isValidAdminToken(authHeader)) {
       sendJSON({ success: false, error: 'Unauthorized Admin Access' }, 401);
       return;
     }
+
     const analytics = readAnalyticsDB();
     const hourlyList = Object.values(analytics.hourlyData || {}).map(h => {
       const avgDwellMin = h.visitors > 0 ? ((h.totalDwellSeconds / h.visitors) / 60).toFixed(1) : '0';
@@ -446,7 +502,7 @@ const server = http.createServer((req, res) => {
   // Admin Force Delete API
   if (pathname.match(/^\/api\/admin\/posts\/[^\/]+$/) && method === 'DELETE') {
     const authHeader = req.headers['authorization'] || '';
-    if (!authHeader.includes('ckdgh0828')) {
+    if (!isValidAdminToken(authHeader)) {
       sendJSON({ success: false, error: 'Unauthorized Admin Access' }, 401);
       return;
     }
@@ -471,7 +527,12 @@ const server = http.createServer((req, res) => {
 
   // FIA Live Driver & Constructor Standings API
   if (pathname === '/api/standings' && method === 'GET') {
-    sendJSON({ success: true, standings: localStandingsCache, updatedAt: localCacheUpdatedAt });
+    sendJSON({
+      success: true,
+      standings: localStandingsCache,
+      constructorStandings: localConstructorStandingsCache,
+      updatedAt: localCacheUpdatedAt
+    });
     return;
   }
 

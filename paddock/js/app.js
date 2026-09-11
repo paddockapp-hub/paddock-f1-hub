@@ -12,12 +12,6 @@ var App = {
     App.setupHamburger();
     App.startDwellTimePing();
     
-    // 메뉴 기본적으로 펼침 상태로 설정
-    var navLinks = document.getElementById('nav-links');
-    var navHam = document.getElementById('nav-hamburger');
-    if (navLinks) navLinks.classList.add('open');
-    if (navHam) navHam.classList.add('active');
-    
     // Handle initial language from URL if present
     if (window.location.search.includes('lang=ko')) {
       this.currentLang = 'ko';
@@ -81,21 +75,51 @@ var App = {
       } catch (err) {}
     }
 
-    // 페이지 이동 시 메뉴 반드시 닫기
-    var navLinks = document.getElementById('nav-links');
-    var navHam = document.getElementById('nav-hamburger');
-    if (navLinks) navLinks.classList.remove('open');
-    if (navHam) navHam.classList.remove('active');
+    this.closeMenu();
 
     window.scrollTo(0, 0);
   },
 
   setupHamburger: function() {
-    // 메뉴가 항상 펼쳐져 있으므로 햄버거 버튼 기능 비활성화
+    var self = this;
     var links = document.getElementById('nav-links');
-    if (links) {
-      links.classList.add('open'); // 항상 펼침 상태 유지
+    var button = document.getElementById('nav-hamburger');
+    if (!links || !button) return;
+
+    button.addEventListener('click', function() {
+      var isOpen = links.classList.toggle('open');
+      button.classList.toggle('active', isOpen);
+      button.setAttribute('aria-expanded', String(isOpen));
+      links.setAttribute('aria-hidden', String(!isOpen));
+    });
+
+    links.addEventListener('click', function(event) {
+      if (event.target.closest('.nav-link, .nav-logo, .mobile-extra-controls a')) {
+        self.closeMenu();
+      }
+    });
+
+    document.addEventListener('click', function(event) {
+      if (!links.classList.contains('open')) return;
+      if (!links.contains(event.target) && !button.contains(event.target)) {
+        self.closeMenu();
+      }
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') self.closeMenu();
+    });
+  },
+
+  closeMenu: function() {
+    var links = document.getElementById('nav-links');
+    var button = document.getElementById('nav-hamburger');
+    if (links) links.classList.remove('open');
+    if (button) {
+      button.classList.remove('active');
+      button.setAttribute('aria-expanded', 'false');
     }
+    if (links) links.setAttribute('aria-hidden', 'true');
   },
 
   toggleLanguage: function() {

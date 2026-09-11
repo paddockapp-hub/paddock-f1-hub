@@ -85,7 +85,8 @@ git push -u origin main
    - Output Directory: (비워둠)
 4. 환경 변수:
    - `PORT`: 8888
-   - `ADMIN_PASS`: 원하는 비밀번호
+   - `ADMIN_PASS`: 기존 관리자 비밀번호
+   - `APP_SALT`: 충분히 긴 랜덤 문자열
 5. "Deploy" 클릭
 
 **결과**: 자동으로 HTTPS 도메인 할당 (예: paddock-f1-hub.vercel.app)
@@ -130,13 +131,15 @@ config: {
 ### 1. 관리자 비밀번호 변경
 ```bash
 # 환경 변수로 설정
-set ADMIN_PASS=새비밀번호  # Windows
-export ADMIN_PASS=새비밀번호  # macOS/Linux
+set ADMIN_PASS=기존관리자비밀번호  # Windows
+set APP_SALT=충분히긴랜덤문자열  # Windows
+export ADMIN_PASS=기존관리자비밀번호  # macOS/Linux
+export APP_SALT=충분히긴랜덤문자열  # macOS/Linux
 ```
 
 또는 `server.js` 파일에서 직접 수정:
 ```javascript
-const ADMIN_PASS = process.env.ADMIN_PASS || '새비밀번호';
+const ADMIN_PASS = process.env.ADMIN_PASS;
 ```
 
 ### 2. Firebase 보안 규칙

@@ -1,5 +1,5 @@
 /* PADDOCK Service Worker for Offline Resilience & PWA Support */
-const CACHE_NAME = 'paddock-v1';
+const CACHE_NAME = 'paddock-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -26,6 +26,14 @@ self.addEventListener('install', (e) => {
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS).catch(() => {});
     })
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
   );
 });
 

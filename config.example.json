@@ -5,7 +5,7 @@
     "environment": "production"
   },
   "admin": {
-    "password": "ckdgh0828!",
+    "password": "SET_ADMIN_PASS_ENVIRONMENT_VARIABLE",
     "sessionTimeout": 3600000
   },
   "features": {

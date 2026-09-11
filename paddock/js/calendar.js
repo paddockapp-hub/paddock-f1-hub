@@ -2,11 +2,13 @@
 
 var CalendarPage = {
   races: [],
+  syncTimer: null,
 
   render: function() {
+    var seasonYear = new Date().getFullYear();
     return '<div class="page-container calendar-page">' +
       '<div style="margin-bottom: 1.5rem;">' +
-        '<h1 class="page-title">2026 F1 Season Calendar</h1>' +
+        '<h1 class="page-title">' + seasonYear + ' F1 Season Calendar</h1>' +
         '<p class="page-subtitle">Real-time automated FIA circuit schedule & race status engine.</p>' +
       '</div>' +
       '<div class="calendar-grid" id="calendar-grid-container">' + this.renderRaceCards() + '</div>' +
@@ -62,8 +64,11 @@ var CalendarPage = {
 
   fetchRacesFromAPI: function() {
     var self = this;
-    fetch('/api/races')
-      .then(function(res) { return res.json(); })
+    fetch('/api/races?ts=' + Date.now(), { cache: 'no-store' })
+      .then(function(res) {
+        if (!res.ok) throw new Error('Calendar API request failed');
+        return res.json();
+      })
       .then(function(data) {
         if (data && data.success && data.races && data.races.length > 0) {
           self.races = data.races;
@@ -73,12 +78,24 @@ var CalendarPage = {
           if (container) container.innerHTML = self.renderRaceCards();
         }
       })
-      .catch(function(e) {});
+      .catch(function(e) {
+        var container = document.getElementById('calendar-grid-container');
+        if (container && self.races.length === 0) {
+          container.innerHTML = '<div class="empty-state">Live calendar is temporarily unavailable. Retrying...</div>';
+        }
+      });
   },
 
   init: function() {
+    if (this.syncTimer) clearInterval(this.syncTimer);
     this.fetchRacesFromAPI();
+    this.syncTimer = setInterval(this.fetchRacesFromAPI.bind(this), 30000);
   },
 
-  cleanup: function() {}
+  cleanup: function() {
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
+    }
+  }
 };

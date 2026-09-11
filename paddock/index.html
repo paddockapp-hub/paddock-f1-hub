@@ -30,8 +30,12 @@
         <span class="logo-text">PADDOCK</span>
       </a>
 
-      <!-- 우측 상단 펼침 메뉴 (데스크톱 및 세로모드 ☰ 석삼자 클릭 시 펼쳐지는 메뉴) -->
-      <div class="nav-links" id="nav-links">
+      <button class="nav-hamburger" id="nav-hamburger" type="button"
+        aria-label="Open navigation menu" aria-expanded="false" aria-controls="nav-links">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="nav-links" id="nav-links" aria-hidden="true">
         <a href="#home" class="nav-link active" id="nav-home" data-page="home">🏠 홈 (Home)</a>
         <a href="#calendar" class="nav-link" id="nav-calendar" data-page="calendar">📅 캘린더 (Calendar)</a>
         <a href="#standings" class="nav-link" id="nav-standings" data-page="standings">🏆 순위표 (Standings)</a>

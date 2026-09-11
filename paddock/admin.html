@@ -147,9 +147,17 @@
   <script>
     let adminToken = sessionStorage.getItem('paddock_admin_token') || '';
 
-    window.onload = function() {
-      if (adminToken === 'admin_authenticated_token_ckdgh0828') {
-        showDashboard();
+    window.onload = async function() {
+      if (adminToken) {
+        try {
+          const res = await fetch('/api/admin/session', {
+            headers: { 'Authorization': adminToken }
+          });
+          if (res.ok) showDashboard();
+          else sessionStorage.removeItem('paddock_admin_token');
+        } catch (e) {
+          sessionStorage.removeItem('paddock_admin_token');
+        }
       }
       document.getElementById('admin-pass-input').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') attemptLogin();
