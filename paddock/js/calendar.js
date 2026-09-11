@@ -72,6 +72,13 @@ var CalendarPage = {
       .then(function(data) {
         if (data && data.success && data.races && data.races.length > 0) {
           self.races = data.races;
+          if (data.nextRace) {
+            self.races = self.races.map(function(race) {
+              var copy = Object.assign({}, race);
+              copy.status = data.nextRace.round === race.round ? 'NEXT' : race.status;
+              return copy;
+            });
+          }
           // Make races available globally for other modules
           window.LOCAL_RACES = data.races;
           var container = document.getElementById('calendar-grid-container');

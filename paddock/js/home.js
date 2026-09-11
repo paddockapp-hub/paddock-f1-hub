@@ -136,7 +136,7 @@ var HomePage = {
       })
       .then(function(data) {
         if (!data || !data.success || !data.races || data.races.length === 0) return;
-        var race = data.races.find(function(item) { return item.status === 'NEXT'; });
+        var race = data.nextRace || data.races.find(function(item) { return item.status === 'NEXT'; });
         if (!race) return;
         self.nextRace = race;
         var title = document.getElementById('home-gp-title');

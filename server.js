@@ -198,7 +198,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
 // 1. MASTER PROCESS (Production Orchestrator)
 // ==========================================
 if (cluster.isMaster || cluster.isPrimary) {
-  const numCpus = Math.max(2, os.cpus().length);
+  const numCpus = Math.min(2, Math.max(1, os.cpus().length));
   console.log(`[Master Production Engine] Launching ${numCpus} Cluster Worker Threads...`);
 
   let globalStandingsCache = null;
@@ -290,6 +290,7 @@ if (cluster.isMaster || cluster.isPrimary) {
   }
 
   function broadcastCacheToWorkers() {
+    const nextRace = globalRacesCache ? globalRacesCache.find(race => race.status === 'NEXT') || null : null;
     for (const id in cluster.workers) {
       if (cluster.workers[id] && cluster.workers[id].isConnected()) {
         cluster.workers[id].send({
@@ -297,6 +298,7 @@ if (cluster.isMaster || cluster.isPrimary) {
           standings: globalStandingsCache,
           constructorStandings: globalConstructorStandingsCache,
           races: globalRacesCache,
+          nextRace: nextRace,
           updatedAt: lastSyncTime
         });
       }
@@ -315,6 +317,7 @@ if (cluster.isMaster || cluster.isPrimary) {
           standings: globalStandingsCache,
           constructorStandings: globalConstructorStandingsCache,
           races: globalRacesCache,
+          nextRace: globalRacesCache ? globalRacesCache.find(race => race.status === 'NEXT') || null : null,
           updatedAt: lastSyncTime
         });
       }
@@ -329,6 +332,7 @@ if (cluster.isMaster || cluster.isPrimary) {
       standings: globalStandingsCache,
       constructorStandings: globalConstructorStandingsCache,
       races: globalRacesCache,
+      nextRace: globalRacesCache ? globalRacesCache.find(race => race.status === 'NEXT') || null : null,
       updatedAt: lastSyncTime
     });
   });
@@ -343,6 +347,7 @@ if (cluster.isMaster || cluster.isPrimary) {
 let localStandingsCache = null;
 let localConstructorStandingsCache = null;
 let localRacesCache = null;
+let localNextRace = null;
 let localCacheUpdatedAt = Date.now();
 
 try { process.send({ type: 'REQUEST_CACHE' }); } catch (e) {}
@@ -352,6 +357,7 @@ process.on('message', (msg) => {
     if (msg.standings) localStandingsCache = msg.standings;
     if (msg.constructorStandings) localConstructorStandingsCache = msg.constructorStandings;
     if (msg.races) localRacesCache = msg.races;
+    if (msg.nextRace !== undefined) localNextRace = msg.nextRace;
     if (msg.updatedAt) localCacheUpdatedAt = msg.updatedAt;
   }
 });
@@ -440,6 +446,11 @@ const server = http.createServer((req, res) => {
 
   // ===== API ENDPOINTS =====
 
+  if (pathname === '/healthz' && method === 'GET') {
+    sendJSON({ status: 'ok', updatedAt: localCacheUpdatedAt });
+    return;
+  }
+
   // Analytics Ping API
   if (pathname === '/api/analytics/ping' && method === 'POST') {
     let body = '';
@@ -521,7 +532,12 @@ const server = http.createServer((req, res) => {
 
   // FIA Live Schedule & Race API
   if (pathname === '/api/races' && method === 'GET') {
-    sendJSON({ success: true, races: localRacesCache, updatedAt: localCacheUpdatedAt });
+    sendJSON({
+      success: Array.isArray(localRacesCache) && localRacesCache.length > 0,
+      races: localRacesCache || [],
+      nextRace: localNextRace,
+      updatedAt: localCacheUpdatedAt
+    });
     return;
   }
 
