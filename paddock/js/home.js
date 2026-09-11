@@ -7,32 +7,6 @@ var HomePage = {
 
   render: function() {
     return '<div class="page-container home-page fade-in">' +
-      '<!-- Hero Countdown & Session Schedule Section -->' +
-      '<section class="hero-section" style="background: radial-gradient(circle at top, var(--bg-secondary), var(--bg-primary)); border: 1px solid var(--glass-border); border-radius: var(--border-radius-lg); padding: 2.5rem 1.5rem; text-align: center; margin-bottom: 2rem; box-shadow: var(--glass-shadow);">' +
-        '<div class="live-badge" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(225, 6, 0, 0.15); border: 1px solid rgba(225, 6, 0, 0.3); color: #ff5555; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem; letter-spacing: 1px;">' +
-          '<span class="live-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-red); animation: pulse 1.5s infinite;"></span> NEXT GRAND PRIX' +
-        '</div>' +
-
-        '<h1 id="home-gp-title" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; margin-bottom: 0.2rem;">Loading next Grand Prix...</h1>' +
-        '<p id="home-gp-circuit" style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem;">Loading live F1 calendar...</p>' +
-
-        '<!-- Countdown Grid -->' +
-        '<div class="countdown-grid" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">' +
-          '<div class="time-unit" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius); padding: 1rem; min-width: 80px;"><div class="time-val" id="cd-days" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: white; line-height: 1;">00</div><div class="time-lbl" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">DAYS</div></div>' +
-          '<div class="time-unit" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius); padding: 1rem; min-width: 80px;"><div class="time-val" id="cd-hours" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: white; line-height: 1;">00</div><div class="time-lbl" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">HOURS</div></div>' +
-          '<div class="time-unit" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius); padding: 1rem; min-width: 80px;"><div class="time-val" id="cd-minutes" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: white; line-height: 1;">00</div><div class="time-lbl" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">MINS</div></div>' +
-          '<div class="time-unit" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius); padding: 1rem; min-width: 80px;"><div class="time-val" id="cd-seconds" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 900; color: white; line-height: 1;">00</div><div class="time-lbl" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">SECS</div></div>' +
-        '</div>' +
-
-        '<!-- Grand Prix Session Timetable -->' +
-        '<div class="session-timetable-box" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.2rem; max-width: 600px; margin: 0 auto;">' +
-          '<h4 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.8rem; letter-spacing: 1px;">📅 NEXT RACE (LOCAL TIME)</h4>' +
-          '<div id="home-session-list" style="display: flex; flex-direction: column; gap: 6px;">' +
-            '<div style="padding:8px 10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.85rem; color:var(--text-secondary);">Official session times will appear when the live schedule provides them.</div>' +
-          '</div>' +
-        '</div>' +
-      '</section>' +
-
       '<!-- TOP 5 Driver Standings Section Only -->' +
       '<section class="championship-section" style="max-width: 800px; margin: 0 auto;">' +
         '<div class="card" style="background: var(--bg-card); border: 1px solid var(--glass-border); border-radius: var(--border-radius-lg); padding: 1.5rem;">' +
@@ -208,10 +182,6 @@ var HomePage = {
   },
 
   init: function() {
-    this.startCountdown();
-    this.fetchNextRace();
-    if (this.syncTimer) clearInterval(this.syncTimer);
-    this.syncTimer = setInterval(this.fetchNextRace.bind(this), 30000);
     this.fetchTop5FromAPI();
     this.standingsSyncTimer = setInterval(this.fetchTop5FromAPI.bind(this), 30000);
   },
