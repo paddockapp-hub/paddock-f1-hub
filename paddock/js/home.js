@@ -2,6 +2,8 @@
 
 var HomePage = {
   countdownInterval: null,
+  syncTimer: null,
+  nextRace: null,
 
   render: function() {
     return '<div class="page-container home-page fade-in">' +
@@ -11,8 +13,8 @@ var HomePage = {
           '<span class="live-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--accent-red); animation: pulse 1.5s infinite;"></span> NEXT GRAND PRIX' +
         '</div>' +
 
-        '<h1 id="home-gp-title" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; margin-bottom: 0.2rem;">Hungarian Grand Prix 🇭🇺</h1>' +
-        '<p id="home-gp-circuit" style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem;">Hungaroring • Budapest</p>' +
+        '<h1 id="home-gp-title" style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; margin-bottom: 0.2rem;">Loading next Grand Prix...</h1>' +
+        '<p id="home-gp-circuit" style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 1.5rem;">Loading live F1 calendar...</p>' +
 
         '<!-- Countdown Grid -->' +
         '<div class="countdown-grid" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">' +
@@ -24,13 +26,9 @@ var HomePage = {
 
         '<!-- Grand Prix Session Timetable -->' +
         '<div class="session-timetable-box" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; padding: 1.2rem; max-width: 600px; margin: 0 auto;">' +
-          '<h4 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.8rem; letter-spacing: 1px;">📅 GRAND PRIX SESSION SCHEDULE (현지 시간표)</h4>' +
+          '<h4 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.8rem; letter-spacing: 1px;">📅 NEXT RACE (LOCAL TIME)</h4>' +
           '<div id="home-session-list" style="display: flex; flex-direction: column; gap: 6px;">' +
-            '<div style="display:flex; justify-content:space-between; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.85rem;"><span>Practice 1 (FP1)</span><span style="font-weight:600; color:white;">Fri 13:30</span></div>' +
-            '<div style="display:flex; justify-content:space-between; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.85rem;"><span>Practice 2 (FP2)</span><span style="font-weight:600; color:white;">Fri 17:00</span></div>' +
-            '<div style="display:flex; justify-content:space-between; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.85rem;"><span>Practice 3 (FP3)</span><span style="font-weight:600; color:white;">Sat 12:30</span></div>' +
-            '<div style="display:flex; justify-content:space-between; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.85rem;"><span>Qualifying (예선)</span><span style="font-weight:600; color:#FFD700;">Sat 16:00</span></div>' +
-            '<div style="display:flex; justify-content:space-between; padding:6px 10px; background:rgba(225,6,0,0.15); border:1px solid rgba(225,6,0,0.3); border-radius:6px; font-size:0.85rem;"><span>Race (본선 결승)</span><span style="font-weight:700; color:#ff5555;">Sun 15:00</span></div>' +
+            '<div style="padding:8px 10px; background:rgba(255,255,255,0.03); border-radius:6px; font-size:0.85rem; color:var(--text-secondary);">Official session times will appear when the live schedule provides them.</div>' +
           '</div>' +
         '</div>' +
       '</section>' +
@@ -82,19 +80,9 @@ var HomePage = {
   startCountdown: function() {
     var self = this;
     function updateClock() {
-      // Use dynamic next race date from API if available
-      var nextRaceDate = new Date('2026-07-26T13:00:00Z');
-      
-      // Try to get next race from calendar data
-      if (typeof CalendarPage !== 'undefined' && CalendarPage.races && CalendarPage.races.length > 0) {
-        var nextRace = CalendarPage.races.find(function(r) { return r.status === 'NEXT'; });
-        if (nextRace && nextRace.date) {
-          nextRaceDate = new Date(nextRace.date);
-        }
-      }
-      
+      var nextRaceDate = self.nextRace && self.nextRace.date ? new Date(self.nextRace.date) : null;
       var now = new Date();
-      var diff = nextRaceDate - now;
+      var diff = nextRaceDate ? nextRaceDate - now : 0;
 
       var days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
       var hours = Math.max(0, Math.floor((diff / (1000 * 60 * 60)) % 24));
@@ -109,6 +97,40 @@ var HomePage = {
 
     updateClock();
     this.countdownInterval = setInterval(updateClock, 1000);
+  },
+
+  fetchNextRace: function() {
+    var self = this;
+    return fetch('/api/races?ts=' + Date.now(), { cache: 'no-store' })
+      .then(function(res) {
+        if (!res.ok) throw new Error('Race API request failed');
+        return res.json();
+      })
+      .then(function(data) {
+        if (!data || !data.success || !data.races || data.races.length === 0) return;
+        var race = data.races.find(function(item) { return item.status === 'NEXT'; });
+        if (!race) return;
+        self.nextRace = race;
+        var title = document.getElementById('home-gp-title');
+        var circuit = document.getElementById('home-gp-circuit');
+        var schedule = document.getElementById('home-session-list');
+        var badge = document.querySelector('.live-badge');
+        if (title) title.textContent = race.raceName || 'Next Grand Prix';
+        if (circuit) {
+          circuit.textContent = (race.circuitName || 'F1 Circuit') +
+            (race.locality ? ' • ' + race.locality : '') +
+            (race.country ? ', ' + race.country : '');
+        }
+        if (schedule) {
+          var dateText = new Intl.DateTimeFormat(undefined, {
+            weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+          }).format(new Date(race.date));
+          schedule.innerHTML = '<div style="padding:8px 10px; background:rgba(225,6,0,0.15); border:1px solid rgba(225,6,0,0.3); border-radius:6px; font-size:0.85rem;"><span>Race start</span><span style="float:right; font-weight:700; color:#ff5555;">' + dateText + '</span></div>';
+        }
+        if (badge) badge.lastChild.textContent = ' NEXT GRAND PRIX';
+      })
+      .catch(function() {});
   },
 
   fetchTop5FromAPI: function() {
@@ -147,10 +169,17 @@ var HomePage = {
 
   init: function() {
     this.startCountdown();
+    this.fetchNextRace();
+    if (this.syncTimer) clearInterval(this.syncTimer);
+    this.syncTimer = setInterval(this.fetchNextRace.bind(this), 30000);
     this.fetchTop5FromAPI();
   },
 
   cleanup: function() {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
+    }
   }
 };
