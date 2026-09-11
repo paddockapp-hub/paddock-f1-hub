@@ -8,6 +8,7 @@ const zlib = require('zlib');
 const crypto = require('crypto');
 
 const PORT = process.env.PORT || 8888;
+const IS_SERVERLESS = Boolean(process.env.VERCEL);
 const IS_PROD = process.env.NODE_ENV === 'production';
 const PUBLIC_DIR = path.join(__dirname, 'paddock');
 const DB_FILE = path.join(__dirname, 'posts_db.json');
@@ -197,7 +198,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
 // ==========================================
 // 1. MASTER PROCESS (Production Orchestrator)
 // ==========================================
-if (cluster.isMaster || cluster.isPrimary) {
+if (!IS_SERVERLESS && (cluster.isMaster || cluster.isPrimary)) {
   const numCpus = Math.min(2, Math.max(1, os.cpus().length));
   console.log(`[Master Production Engine] Launching ${numCpus} Cluster Worker Threads...`);
 
@@ -744,6 +745,10 @@ process.on('SIGTERM', () => {
   server.close(() => { process.exit(0); });
 });
 
-server.listen(PORT, () => {
-  console.log(`[Production Worker Thread ${process.pid}] Server Ready at http://localhost:${PORT}`);
-});
+if (IS_SERVERLESS) {
+  module.exports = server;
+} else {
+  server.listen(PORT, () => {
+    console.log(`[Production Worker Thread ${process.pid}] Server Ready at http://localhost:${PORT}`);
+  });
+}
