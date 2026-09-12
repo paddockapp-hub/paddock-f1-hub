@@ -14,6 +14,12 @@ function init() {
   loadPosts();
   setupEventListeners();
   checkAdminStatus();
+  
+  // 자동 새로고침 (30초마다)
+  setInterval(() => {
+    if (currentTab === 'standings') loadStandings();
+    if (currentTab === 'races') loadRaces();
+  }, 30000);
 }
 
 function setupEventListeners() {
@@ -26,6 +32,12 @@ function handleNavigation(e) {
     e.preventDefault();
     currentTab = e.target.getAttribute('data-tab');
     renderApp();
+    
+    // 탭 전환 후 데이터 로드
+    if (currentTab === 'standings') loadStandings();
+    if (currentTab === 'races') loadRaces();
+    if (currentTab === 'community') loadPosts();
+    if (currentTab === 'admin' && adminToken) loadAdminStats();
   }
 }
 
@@ -87,7 +99,7 @@ function renderHome() {
           <p>2026 시즌의 모든 레이스 일정을 확인하세요</p>
         </div>
         <div class="card">
-          <h3>💬 팬 커뮤니티</h3>
+          <h3>💬 팬 커��니티</h3>
           <p>다른 F1 팬들과 의견을 나누세요</p>
         </div>
       </div>
@@ -98,13 +110,15 @@ function renderHome() {
 function renderStandings() {
   return `
     <section class="section">
-      <h2>🏆 드라이버 순위표</h2>
+      <h2>🏆 드라이버 순위표 <span style="font-size: 0.8rem; color: #FFD700;">⚡ 실시간 업데이트</span></h2>
+      <div style="margin-bottom: 1rem; color: #999;">30초마다 자동 새로고침됩니다</div>
       <div id="driver-standings" class="card">
         <div class="loader"></div> 로딩 중...
       </div>
     </section>
     <section class="section">
-      <h2>🏭 컨스트럭터 순위표</h2>
+      <h2>🏭 컨스트럭터 순위표 <span style="font-size: 0.8rem; color: #FFD700;">⚡ 실시간 업데이트</span></h2>
+      <div style="margin-bottom: 1rem; color: #999;">30초마다 자동 새로고침됩니다</div>
       <div id="constructor-standings" class="card">
         <div class="loader"></div> 로딩 중...
       </div>
@@ -236,23 +250,25 @@ async function loadStandings() {
     if (currentTab === 'standings' && data.standings) {
       const driverElem = document.getElementById('driver-standings');
       if (driverElem && data.standings.length > 0) {
+        const timestamp = new Date().toLocaleTimeString('ko-KR');
         driverElem.innerHTML = `
+          <div style="margin-bottom: 1rem; font-size: 0.85rem; color: #888;">마지막 업데이트: ${timestamp}</div>
           <table class="standings-table">
             <thead>
               <tr>
                 <th>순위</th>
                 <th>드라이버</th>
                 <th>팀</th>
-                <th>포인트</th>
+                <th style="color: #FFD700; font-weight: bold;">포인트 ⚡</th>
               </tr>
             </thead>
             <tbody>
-              ${data.standings.slice(0, 20).map(driver => `
-                <tr>
+              ${data.standings.slice(0, 20).map((driver, idx) => `
+                <tr style="${idx === 0 ? 'background: rgba(255, 215, 0, 0.1);' : ''}">
                   <td><strong>${driver.position}</strong></td>
                   <td>${driver.Driver.givenName} ${driver.Driver.familyName}</td>
                   <td>${driver.Constructors?.[0]?.name || 'N/A'}</td>
-                  <td><strong>${driver.points}</strong></td>
+                  <td><strong style="color: #FFD700; font-size: 1.1em;">${driver.points}</strong></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -262,21 +278,23 @@ async function loadStandings() {
       
       const constructorElem = document.getElementById('constructor-standings');
       if (constructorElem && data.constructorStandings) {
+        const timestamp = new Date().toLocaleTimeString('ko-KR');
         constructorElem.innerHTML = `
+          <div style="margin-bottom: 1rem; font-size: 0.85rem; color: #888;">마지막 업데이트: ${timestamp}</div>
           <table class="standings-table">
             <thead>
               <tr>
                 <th>순위</th>
                 <th>팀</th>
-                <th>포인트</th>
+                <th style="color: #FFD700; font-weight: bold;">포인트 ⚡</th>
               </tr>
             </thead>
             <tbody>
-              ${data.constructorStandings.slice(0, 20).map(constructor => `
-                <tr>
+              ${data.constructorStandings.slice(0, 20).map((constructor, idx) => `
+                <tr style="${idx === 0 ? 'background: rgba(255, 215, 0, 0.1);' : ''}">
                   <td><strong>${constructor.position}</strong></td>
                   <td>${constructor.Constructor.name}</td>
-                  <td><strong>${constructor.points}</strong></td>
+                  <td><strong style="color: #FFD700; font-size: 1.1em;">${constructor.points}</strong></td>
                 </tr>
               `).join('')}
             </tbody>
