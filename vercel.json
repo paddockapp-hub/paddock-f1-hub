@@ -1,15 +1,26 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
+  "buildCommand": "npm install",
+  "functions": {
+    "server.js": {
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 60
     }
-  ],
+  },
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server.js",
+      "methods": ["GET", "POST", "DELETE", "OPTIONS"]
+    },
     {
       "src": "/(.*)",
       "dest": "server.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "8888"
+  }
 }

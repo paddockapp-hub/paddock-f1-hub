@@ -2,11 +2,18 @@ services:
   - type: web
     name: paddock-f1-hub
     runtime: node
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /healthz
+    healthCheckInterval: 30
+    maxInstanceCount: 1
     envVars:
       - key: ADMIN_PASS
         sync: false
       - key: APP_SALT
-        generateValue: true
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8888"

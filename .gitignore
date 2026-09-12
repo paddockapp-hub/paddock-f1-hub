@@ -3,24 +3,10 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
-# Environment variables
+# Environment
 .env
 .env.local
-.env.production
-
-# Database files (optional - uncomment if you want to ignore local data)
-# posts_db.json
-# posts_db.json.bak
-# analytics_db.json
-# analytics_db.json.bak
-
-# Firebase keys
-*paddockapp1-firebase-adminsdk-*.json
-
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
+.env.*.local
 
 # IDE
 .vscode/
@@ -28,6 +14,21 @@ desktop.ini
 *.swp
 *.swo
 *~
+.DS_Store
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Testing
+.nyc_output/
+coverage/
+
+# Database
+*.db
+*.sqlite
 
 # Logs
 logs/
@@ -35,8 +36,5 @@ logs/
 
 # Temporary files
 *.tmp
-*.temp
-
-# Build outputs
-dist/
-build/
+*.bak
+.cache/
