@@ -28,6 +28,12 @@ function hashPassword(pass) {
   return crypto.createHash('sha256').update(String(pass) + SALT).digest('hex');
 }
 
+// Verify hashed password
+function verifyPassword(inputPass, hash) {
+  if (!inputPass || !hash) return false;
+  return hashPassword(inputPass) === hash;
+}
+
 function createAdminToken() {
   const payload = Buffer.from(JSON.stringify({
     role: 'admin',
@@ -39,7 +45,14 @@ function createAdminToken() {
 
 function isValidAdminToken(token) {
   if (!token) return false;
-  const parts = String(token).split('.');
+  let tokenString = String(token);
+  
+  // Remove 'Bearer ' prefix if present
+  if (tokenString.startsWith('Bearer ')) {
+    tokenString = tokenString.substring(7);
+  }
+  
+  const parts = tokenString.split('.');
   if (parts.length !== 2) return false;
 
   const expectedSignature = crypto.createHmac('sha256', SALT).update(parts[0]).digest('base64url');
@@ -473,7 +486,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const data = JSON.parse(body);
-        if (data.password === ADMIN_PASS) {
+        if (verifyPassword(data.password, hashPassword(ADMIN_PASS))) {
           sendJSON({ success: true, token: createAdminToken() });
         } else {
           sendJSON({ success: false, error: 'Incorrect Admin Password' }, 401);
