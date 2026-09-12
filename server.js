@@ -9,18 +9,30 @@ const crypto = require('crypto');
 
 const PORT = process.env.PORT || 8888;
 const IS_SERVERLESS = Boolean(process.env.VERCEL);
+const IS_RENDER = Boolean(process.env.RENDER);
 const IS_PROD = process.env.NODE_ENV === 'production';
 const PUBLIC_DIR = path.join(__dirname, 'paddock');
 const DB_FILE = path.join(__dirname, 'posts_db.json');
 const DB_BACKUP_FILE = path.join(__dirname, 'posts_db.json.bak');
 const ANALYTICS_FILE = path.join(__dirname, 'analytics_db.json');
 const ANALYTICS_BACKUP_FILE = path.join(__dirname, 'analytics_db.json.bak');
-const ADMIN_PASS = process.env.ADMIN_PASS;
-const SALT = process.env.APP_SALT;
 
-if (!IS_SERVERLESS && (!ADMIN_PASS || !SALT)) {
-  throw new Error('ADMIN_PASS and APP_SALT environment variables are required.');
+// 환경 변수 설정 (Render/Vercel에서 없으면 기본값 사용)
+let ADMIN_PASS = process.env.ADMIN_PASS;
+let SALT = process.env.APP_SALT;
+
+// 로컬 개발 또는 로컬 배포 시 필수
+if (!IS_SERVERLESS && !IS_RENDER) {
+  if (!ADMIN_PASS || !SALT) {
+    console.warn('[WARNING] ADMIN_PASS and APP_SALT not set. Using defaults for development.');
+    ADMIN_PASS = ADMIN_PASS || 'paddock2026';
+    SALT = SALT || 'default-salt-2026';
+  }
 }
+
+// Render/Vercel에서는 환경 변수 없어도 진행 (기본값 사용)
+if (!ADMIN_PASS) ADMIN_PASS = 'paddock2026-default';
+if (!SALT) SALT = 'salt-' + Date.now();
 
 // Salted Password Hash
 function hashPassword(pass) {
