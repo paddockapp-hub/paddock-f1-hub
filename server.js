@@ -18,7 +18,7 @@ const ANALYTICS_BACKUP_FILE = path.join(__dirname, 'analytics_db.json.bak');
 const ADMIN_PASS = process.env.ADMIN_PASS;
 const SALT = process.env.APP_SALT;
 
-if (!ADMIN_PASS || !SALT) {
+if (!IS_SERVERLESS && (!ADMIN_PASS || !SALT)) {
   throw new Error('ADMIN_PASS and APP_SALT environment variables are required.');
 }
 
