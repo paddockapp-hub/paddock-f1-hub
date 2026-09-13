@@ -221,6 +221,118 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
 }
 
 // ==========================================
+// FIA 데이터 fetch (클러스터 유무와 무관하게 재사용 가능한 순수 함수)
+// 서버리스(Vercel) 환경에서는 아래에서 직접 이 함수를 호출해서 씁니다.
+// ==========================================
+async function fetchFreshFIAData() {
+  const currentYear = new Date().getFullYear();
+  let races = [];
+  let standings = null;
+  let constructorStandings = null;
+
+  try {
+    let racesData = [];
+    const calRes = await fetchWithTimeout(`https://api.jolpi.ca/ergast/f1/${currentYear}.json`, {}, 8000);
+    if (calRes && calRes.ok) {
+      const calJson = await calRes.json().catch(() => null);
+      if (calJson && calJson.MRData && calJson.MRData.RaceTable) {
+        racesData = calJson.MRData.RaceTable.Races || [];
+      }
+    }
+
+    let raceResultsMap = {};
+    const resultsRes = await fetchWithTimeout(`https://api.jolpi.ca/ergast/f1/${currentYear}/results.json?limit=100`, {}, 8000);
+    if (resultsRes && resultsRes.ok) {
+      const resJson = await resultsRes.json().catch(() => null);
+      if (resJson && resJson.MRData && resJson.MRData.RaceTable && resJson.MRData.RaceTable.Races) {
+        resJson.MRData.RaceTable.Races.forEach(r => {
+          if (r.Results && r.Results[0]) {
+            raceResultsMap[r.round] = {
+              winner: r.Results[0].Driver.givenName + ' ' + r.Results[0].Driver.familyName,
+              winnerTeam: r.Results[0].Constructor ? r.Results[0].Constructor.name : '',
+              winnerPoints: r.Results[0].points || '25'
+            };
+          }
+        });
+      }
+    }
+
+    const now = new Date();
+    let foundNext = false;
+
+    if (racesData && racesData.length > 0) {
+      races = racesData.map(race => {
+        const raceDate = new Date(race.date + 'T' + (race.time || '12:00:00Z'));
+        const isPast = raceDate < now;
+        const result = raceResultsMap[race.round];
+
+        let status = 'UPCOMING';
+        if (isPast) status = 'COMPLETED';
+        else if (!foundNext) { status = 'NEXT'; foundNext = true; }
+
+        return {
+          round: parseInt(race.round),
+          raceName: race.raceName,
+          circuitName: race.Circuit ? race.Circuit.circuitName : 'F1 Circuit',
+          locality: race.Circuit && race.Circuit.Location ? race.Circuit.Location.locality : '',
+          country: race.Circuit && race.Circuit.Location ? race.Circuit.Location.country : '',
+          date: race.date + 'T' + (race.time || '12:00:00Z'),
+          status: status,
+          isCompleted: isPast,
+          winner: result ? result.winner : null,
+          winnerTeam: result ? result.winnerTeam : null,
+          winnerPoints: result ? result.winnerPoints : null
+        };
+      });
+    }
+
+    const stRes = await fetchWithTimeout(`https://api.jolpi.ca/ergast/f1/${currentYear}/driverstandings.json`, {}, 8000);
+    if (stRes && stRes.ok) {
+      const stJson = await stRes.json().catch(() => null);
+      if (stJson && stJson.MRData && stJson.MRData.StandingsTable && stJson.MRData.StandingsTable.StandingsLists.length > 0) {
+        standings = stJson.MRData.StandingsTable.StandingsLists[0].DriverStandings;
+      }
+    }
+
+    const constructorRes = await fetchWithTimeout(`https://api.jolpi.ca/ergast/f1/${currentYear}/constructorstandings.json`, {}, 8000);
+    if (constructorRes && constructorRes.ok) {
+      const constructorJson = await constructorRes.json().catch(() => null);
+      if (constructorJson && constructorJson.MRData &&
+          constructorJson.MRData.StandingsTable &&
+          constructorJson.MRData.StandingsTable.StandingsLists &&
+          constructorJson.MRData.StandingsTable.StandingsLists.length > 0) {
+        constructorStandings = constructorJson.MRData.StandingsTable.StandingsLists[0].ConstructorStandings;
+      }
+    }
+  } catch (err) {
+    console.error('[FIA Sync] fetchFreshFIAData 실패:', err.message);
+  }
+
+  return { races, standings, constructorStandings };
+}
+
+// 서버리스 환경 전용 TTL 캐시. Vercel은 setInterval로 백그라운드 갱신을 유지할 수 없기 때문에,
+// 요청이 들어올 때마다 캐시가 오래됐는지 확인하고, 오래됐으면 그때 새로 가져옵니다.
+// (같은 인스턴스가 재사용되는 동안은 캐시가 유지되어 매번 외부 API를 호출하지 않습니다.)
+let serverlessFIACache = { races: [], standings: null, constructorStandings: null, updatedAt: 0 };
+const SERVERLESS_CACHE_TTL_MS = 5 * 60 * 1000; // 5분
+
+async function getServerlessFIAData() {
+  const isFresh = serverlessFIACache.updatedAt && (Date.now() - serverlessFIACache.updatedAt < SERVERLESS_CACHE_TTL_MS);
+  if (isFresh) return serverlessFIACache;
+
+  const fresh = await fetchFreshFIAData();
+  // 새로 가져온 값이 비어있으면(외부 API가 순간적으로 실패한 경우) 기존 캐시를 계속 씁니다.
+  serverlessFIACache = {
+    races: (fresh.races && fresh.races.length > 0) ? fresh.races : serverlessFIACache.races,
+    standings: fresh.standings || serverlessFIACache.standings,
+    constructorStandings: fresh.constructorStandings || serverlessFIACache.constructorStandings,
+    updatedAt: Date.now()
+  };
+  return serverlessFIACache;
+}
+
+// ==========================================
 // 1. MASTER PROCESS (Production Orchestrator)
 // ==========================================
 if (!IS_SERVERLESS && (cluster.isMaster || cluster.isPrimary)) {
@@ -401,7 +513,7 @@ const MIME_TYPES = {
   '.svg': 'image/svg+xml'
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
 
   const reqCount = (ipRateMap.get(ip) || 0) + 1;
@@ -558,23 +670,44 @@ const server = http.createServer((req, res) => {
 
   // FIA Live Schedule & Race API
   if (pathname === '/api/races' && method === 'GET') {
-    sendJSON({
-      success: Array.isArray(localRacesCache) && localRacesCache.length > 0,
-      races: localRacesCache || [],
-      nextRace: localNextRace,
-      updatedAt: localCacheUpdatedAt
-    });
+    if (IS_SERVERLESS) {
+      const data = await getServerlessFIAData();
+      const nextRace = data.races.find(r => r.status === 'NEXT') || null;
+      sendJSON({
+        success: Array.isArray(data.races) && data.races.length > 0,
+        races: data.races || [],
+        nextRace: nextRace,
+        updatedAt: data.updatedAt
+      });
+    } else {
+      sendJSON({
+        success: Array.isArray(localRacesCache) && localRacesCache.length > 0,
+        races: localRacesCache || [],
+        nextRace: localNextRace,
+        updatedAt: localCacheUpdatedAt
+      });
+    }
     return;
   }
 
   // FIA Live Driver & Constructor Standings API
   if (pathname === '/api/standings' && method === 'GET') {
-    sendJSON({
-      success: true,
-      standings: localStandingsCache,
-      constructorStandings: localConstructorStandingsCache,
-      updatedAt: localCacheUpdatedAt
-    });
+    if (IS_SERVERLESS) {
+      const data = await getServerlessFIAData();
+      sendJSON({
+        success: true,
+        standings: data.standings,
+        constructorStandings: data.constructorStandings,
+        updatedAt: data.updatedAt
+      });
+    } else {
+      sendJSON({
+        success: true,
+        standings: localStandingsCache,
+        constructorStandings: localConstructorStandingsCache,
+        updatedAt: localCacheUpdatedAt
+      });
+    }
     return;
   }
 
